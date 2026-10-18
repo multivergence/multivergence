@@ -6,9 +6,9 @@
 // expiry as its deadline, the venue's capacity as a constraint on the head
 // count, and the budget as a constraint on the quote. Quotes, a new head
 // count and a team poll arrive over two days; holds die as they stop
-// fitting or run out, one hold is extended, and the venue that confirms is
-// promoted. The program then releases the other holds: a branch is data,
-// and letting the venues know is the caller's job.
+// fitting, one hold is extended before it runs out, and the venue that
+// confirms is promoted. The program then lists the holds to release: a
+// branch is data, and letting the venues know is the caller's job.
 //
 //	go run ./examples/holds
 package main
@@ -55,7 +55,7 @@ func run(t *trace.T) {
 	const dhm = "Mon 15:04"
 	day0 := t.Clock
 	t.Say("Multivergence example: an agent books an offsite venue with four holds open at once.")
-	t.Say("Simulated clock over two days. Every number below comes from the engine.")
+	t.Say("Simulated clock over two days. Every probability below comes from the engine.")
 
 	t.Step(dhm, "The request goes on the trunk before any hold is placed")
 	t.Set(mv.Trunk, "event", "team offsite, Thursday and Friday")
@@ -88,6 +88,7 @@ func run(t *trace.T) {
 	t.Must(s.Expire("loft-b", day0.Add(33*time.Hour)))
 	b, _ := s.Branch("loft-b")
 	t.Say("  loft-b deadline now %s", b.Deadline.Format(dhm))
+	t.Check(b.Deadline.Equal(day0.Add(33*time.Hour)), "loft-b's deadline moved to Tuesday 18:00")
 
 	t.At(day0.Add(26 * time.Hour))
 	t.Step(dhm, "Six more people sign up. The head count is a fact, written to every hold")
@@ -119,7 +120,6 @@ func run(t *trace.T) {
 	t.Check(len(release) == 1 && release[0] == "villa-d", "villa-d's hold is the one to release")
 	t.Say("  Without the extension, loft-b's hold would have run out at %s,", day0.Add(24*time.Hour).Format(dhm))
 	t.Say("  before the new head count and the poll arrived.")
-	t.Check(day0.Add(24*time.Hour).Before(day0.Add(26*time.Hour)), "the old deadline came before the head count")
 
 	t.Step(dhm, "The history shows each hold's fate")
 	for _, e := range s.History() {

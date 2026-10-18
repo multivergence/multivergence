@@ -47,7 +47,7 @@ func run(t *trace.T) {
 	const hm = "15:04"
 	day := t.Clock
 	t.Say("Multivergence example: a dispatcher keeps four delivery plans open until the van leaves.")
-	t.Say("Simulated clock. Every number below comes from the engine.")
+	t.Say("Simulated clock. Every probability below comes from the engine.")
 
 	t.Step(hm, "Today's load goes on the trunk")
 	t.Set(mv.Trunk, "parcels", "18")

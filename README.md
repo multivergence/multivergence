@@ -115,7 +115,7 @@ each has a case study on [multivergence.com](https://multivergence.com/tags/case
 | Run | What it shows |
 |---|---|
 | `go run ./examples/fixes` | A coding agent tries three patches for one bug. A constraint keeps the public API fixed, a review lowers one patch's weight, the real test suite kills it, and the patch that passes is promoted. |
-| `go run ./examples/incident` | An on-call agent holds four hypotheses for an outage. A status-page fact rules one out, log clues move the weights and prune another, and the fix of the one past 90% is promoted. |
+| `go run ./examples/incident` | An on-call agent holds four hypotheses for an outage. A status-page fact breaks one's constraint, log clues move the weights and prune another, and the fix of the one past 90% is promoted. |
 | `go run ./examples/holds` | An agent holds four venues for an offsite. Each hold's expiry is a deadline, capacity and budget are constraints, one hold is extended, and the venue that confirms is promoted. |
 | `go run ./examples/routing` | A dispatcher keeps four delivery plans open. A late order breaks the small van's capacity, a traffic report moves the weights, the ferry's cut-off passes, and the best plan is locked. |
 
