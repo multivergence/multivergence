@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Runs every test, larger than CI runs them (MV_SCALE), the race detector,
-# the release plan's cases, the agent demo, the speculation example and the
+# the release plan's cases, the agent demo, the speculation example, the four
+# use examples and the
 # smoke check on static release-style binaries, and writes the output to
 # test/results/ with a note of the machine they ran on. The tests that
 # measure something also write a JSON file of their figures there. The
@@ -52,6 +53,15 @@ cmd="go run ./examples/agent"
 cmd="go run ./examples/speculate"
 { header "Speculative execution: prepare two guesses in branches, promote the right one" "$cmd"; go run ./examples/speculate 2>&1; } > "$out/speculate.txt"
 
+for ex in fixes:"A coding agent tries three fixes, each in its own branch" \
+	incident:"An on-call agent narrows down the cause of an outage" \
+	holds:"An agent books a venue with four holds open at once" \
+	routing:"A dispatcher keeps four delivery plans open until the van leaves"; do
+	name=${ex%%:*}
+	cmd="go run ./examples/$name"
+	{ header "${ex#*:}" "$cmd"; go run "./examples/$name" 2>&1; } > "$out/example-$name.txt"
+done
+
 mkdir "$work/bin"
 CGO_ENABLED=0 go build -trimpath -ldflags '-s -w' -o "$work/bin/multivergence" ./cmd/multivergence
 CGO_ENABLED=0 go build -trimpath -ldflags '-s -w' -o "$work/bin/multivergence-demo" ./examples/agent
@@ -62,5 +72,5 @@ cmd="python3 scripts/smoke.py BIN"
   python3 scripts/smoke.py "$work/bin" 2>&1; } > "$out/smoke.txt"
 
 grep -E '^(ok|FAIL|--- FAIL)' "$out/tests.txt" "$out/race.txt" || true
-tail -n 1 "$out/release-plan.txt" "$out/smoke.txt" "$out/demo.txt" 2>/dev/null || true
+tail -n 1 "$out/release-plan.txt" "$out/smoke.txt" "$out/demo.txt" "$out"/example-*.txt 2>/dev/null || true
 echo "results written to $out/"
