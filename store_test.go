@@ -916,3 +916,52 @@ func TestNoOpTrunkDeleteAndRest(t *testing.T) {
 		t.Fatal("Rest is meant to be ignored without likelihoods:", err)
 	}
 }
+
+// Re-check item 1: a torn record whose value happens to contain a valid
+// frame is still a torn tail, not corruption.
+func TestTornRecordWithFrameInside(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "s.mv")
+	s, err := Open(path, nil)
+	must(t, err)
+	must(t, s.Set(Trunk, "a", []byte("1")))
+	want := s.Digest()
+	val := append(append([]byte("prefix"), frame([]byte("hello, any bytes"))...), make([]byte, 100)...)
+	must(t, s.Set(Trunk, "blob", val))
+	must(t, s.Close())
+	data, _ := os.ReadFile(path)
+	cut := data[:len(data)-60] // inside the zeros, after the embedded frame
+	must(t, os.WriteFile(path, cut, 0o644))
+	r, err := OpenReadOnly(path, nil)
+	must(t, err)
+	if r.Digest() != want {
+		t.Fatal("wrong state")
+	}
+	w, err := Open(path, nil)
+	must(t, err)
+	must(t, w.Close())
+}
+
+// Re-check item 2: a large torn tail opens quickly.
+func TestLargeTornTailIsFast(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "s.mv")
+	s, err := Open(path, &Options{NoSync: true, CompactAfter: 1 << 40})
+	must(t, err)
+	must(t, s.Set(Trunk, "a", []byte("1")))
+	val := make([]byte, 4<<20)
+	for i := 0; i+4 <= len(val); i += 4 {
+		val[i] = byte(i >> 2) // little-endian small ints: many plausible lengths
+	}
+	must(t, s.Set(Trunk, "big", val))
+	must(t, s.Close())
+	data, _ := os.ReadFile(path)
+	must(t, os.WriteFile(path, data[:len(data)-1000], 0o644))
+	start := time.Now()
+	r, err := OpenReadOnly(path, nil)
+	must(t, err)
+	if _, ok, _ := r.Get(Trunk, "big"); ok {
+		t.Fatal("torn value read back")
+	}
+	if d := time.Since(start); d > 2*time.Second {
+		t.Fatalf("opening took %v", d)
+	}
+}

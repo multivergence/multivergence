@@ -5,3 +5,4 @@
 *.mv.compact
 coverage.out
 /scripts/__pycache__/
+*.mv.torn-*

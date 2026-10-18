@@ -54,14 +54,16 @@ open, a tail is **torn** when:
 - it is all zero bytes, which a filesystem can leave when the file grew before
   its data reached the disk; or
 - the last record is shorter than its length says, or fails its checksum, and
-  no valid record follows it.
+  the bytes after its header don't hold a chain of valid records running to
+  the end of the file. (Such a chain is what a damaged record in the middle
+  leaves behind it; a cut-short record leaves only part of itself.)
 
-The writer cuts a torn tail off (keeping its bytes in `NAME.torn-<time>`
-unless they're all zeros), and a reader ignores it. The change in a torn record
+The writer cuts a torn tail off (keeping its bytes, synced, in
+`NAME.torn-<time>` unless they're all zeros), and a reader ignores it. The change in a torn record
 never returned to its caller, so dropping it loses nothing that was confirmed.
 
 Everything else that doesn't parse is **corruption**, and opening fails with
-`ErrCorrupt`, leaving the file as it is: a bad record with a valid one after it,
+`ErrCorrupt`, leaving the file as it is: a bad record with valid ones after it,
 a length field that can't be right, an empty record, a snapshot that fails its
 checksum or its checks, or a change that no longer applies. A compacted file's
 snapshot can't be torn, since it was written to another file and synced before

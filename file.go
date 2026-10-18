@@ -54,17 +54,56 @@ func allZero(b []byte) bool {
 	return true
 }
 
-// frameAhead reports whether a valid record starts anywhere in b. A torn
-// write can only damage the last record, so a bad record with a good one
-// after it is corruption.
-func frameAhead(b []byte) bool {
-	for k := 0; k+recHeaderLen < len(b); k++ {
-		n := binary.LittleEndian.Uint32(b[k:])
-		if n == 0 || uint64(n) > uint64(len(b)-k-recHeaderLen) {
-			continue
+// chainAhead reports whether, somewhere in b, a chain of valid records
+// starts and runs exactly to the end of b. That is what a damaged record in
+// the middle of a log leaves behind it. A torn write leaves only part of one
+// record, and stray bytes inside a value almost never form such a chain.
+//
+// It works backwards in one pass: reach[k] says whether following record
+// lengths from offset k lands exactly on the end. Checksums are only worked
+// out for offsets that reach the end, and at most once each, with a cap on
+// the bytes checked so a pathological tail can't make opening slow (past the
+// cap it says yes, and the file is reported as corrupt rather than cut).
+func chainAhead(b []byte) bool {
+	L := len(b)
+	reach := make([]bool, L+1)
+	reach[L] = true
+	next := func(k int) int {
+		if k+recHeaderLen > L {
+			return -1
 		}
-		if crc32.Checksum(b[k+recHeaderLen:k+recHeaderLen+int(n)], castagnoli) == binary.LittleEndian.Uint32(b[k+4:]) {
+		n := int(binary.LittleEndian.Uint32(b[k:]))
+		if n == 0 || n > L-k-recHeaderLen {
+			return -1
+		}
+		return k + recHeaderLen + n
+	}
+	for k := L - 1; k >= 0; k-- {
+		if e := next(k); e >= 0 && reach[e] {
+			reach[k] = true
+		}
+	}
+	valid := make(map[int]bool)
+	budget := 64 << 20
+	var ok func(k int) bool
+	ok = func(k int) bool {
+		if k == L {
 			return true
+		}
+		if v, seen := valid[k]; seen {
+			return v
+		}
+		e := next(k)
+		budget -= e - k
+		v := crc32.Checksum(b[k+recHeaderLen:e], castagnoli) == binary.LittleEndian.Uint32(b[k+4:]) && ok(e)
+		valid[k] = v
+		return v
+	}
+	for k := 1; k < L; k++ {
+		if reach[k] {
+			if budget < 0 || ok(k) {
+				return true
+			}
 		}
 	}
 	return false
@@ -101,7 +140,7 @@ func parseRecords(b []byte, compacted bool) (recs [][]byte, end int, torn bool, 
 			return corrupt("empty record")
 		}
 		if uint64(n) > uint64(len(rest)-recHeaderLen) {
-			if !mayTear || n > maxRecord || frameAhead(rest[recHeaderLen:]) {
+			if !mayTear || n > maxRecord || chainAhead(rest[recHeaderLen:]) {
 				return corrupt(fmt.Sprintf("record claiming %d bytes", n))
 			}
 			return recs, off, true, nil
@@ -267,7 +306,7 @@ func openLog(path string, opts *Options) (*logFile, *loaded, error) {
 		// record they started never completed, but nothing is thrown away.
 		if tail := data[ld.end:]; !allZero(tail) {
 			name := path + ".torn-" + strconv.FormatInt(time.Now().UnixNano(), 10)
-			if err := os.WriteFile(name, tail, 0o644); err != nil {
+			if err := writeSynced(name, tail); err != nil {
 				return failf(fmt.Errorf("multivergence: saving the torn tail to %s: %w", name, err))
 			}
 		}
@@ -373,4 +412,25 @@ func (l *logFile) close() error {
 	err := l.f.Close()
 	unlockFile(l.lock)
 	return err
+}
+
+// writeSynced writes a new file and makes it and its directory entry
+// durable before returning.
+func writeSynced(name string, data []byte) error {
+	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(data)
+	if err == nil {
+		err = f.Sync()
+	}
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		return err
+	}
+	syncDir(filepath.Dir(name))
+	return nil
 }
