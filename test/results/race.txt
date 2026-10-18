@@ -1,11 +1,11 @@
 # Every test with the race detector, at CI size
-# recorded 2026-10-18 07:43 UTC at no commit plus uncommitted changes, Multivergence 0.1.0, go1.24.7 linux/amd64
+# recorded 2026-10-18 09:32 UTC at 6ba4ce3, Multivergence 0.1.0, go1.24.7 linux/amd64
 # Linux 6.18.44-fc-v139, Intel(R) Xeon(R) Processor @ 2.10GHz, 2 CPUs
 # command: go test -race -count=1 ./...
 
-ok  	github.com/multivergence/multivergence	116.677s
+ok  	github.com/multivergence/multivergence	81.858s
 ?   	github.com/multivergence/multivergence/cmd/multivergence	[no test files]
-ok  	github.com/multivergence/multivergence/examples/agent	1.025s
+ok  	github.com/multivergence/multivergence/examples/agent	1.022s
 ?   	github.com/multivergence/multivergence/examples/speculate	[no test files]
-ok  	github.com/multivergence/multivergence/internal/cli	1.573s
-ok  	github.com/multivergence/multivergence/internal/pmap	1.483s
+ok  	github.com/multivergence/multivergence/internal/cli	1.421s
+ok  	github.com/multivergence/multivergence/internal/pmap	1.500s

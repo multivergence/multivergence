@@ -4,7 +4,7 @@ ok  branches come back in the order they were forked
 ok  plan-train starts at 0.5
 ok  plan-flight starts at 0.3
 ok  plan-bus starts at 0.2
-ok  the trunk is untouched by the plans
+ok  the trunk is untouched by the plans (exit 3: no such key)
 ok  a branch reads its own write
 ok  the fare fact kills the flight
 ok  the death names the constraint

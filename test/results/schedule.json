@@ -10,7 +10,7 @@
   "max_live": 152,
   "os": "linux/amd64",
   "promotes": 12,
-  "recorded": "2026-10-18T07:43:30Z",
+  "recorded": "2026-10-18T09:31:51Z",
   "simulated_days": 30,
   "test": "TestLongSchedule",
   "version": "0.1.0",

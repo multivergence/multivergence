@@ -196,24 +196,27 @@ Every number here comes from [test/results](test/results), which
 CPUs.
 
 - **Isolation.** Random writes, deletes, forks, facts, discards and promotes on
-  the engine and on a model that copies every map in full: 66,538 changes over
-  80 runs, and after every change every key of every branch compared, 87.7
+  the engine and on a model that copies every map in full: 66,618 changes over
+  80 runs, and after every change every key of every branch compared, 86.8
   million reads, with no difference.
-- **Crashes.** A writer process killed with SIGKILL at a random moment, 600
-  times, with compaction set to every 2 KB. 72 kills landed with a promote in
-  flight (57 had completed, 15 had not). Every time, the reopened file held
-  exactly the state after the last confirmed change or after the one in flight,
-  and the store went on working.
+- **Crashes.** A writer process killed with SIGKILL at a random moment, 1,000
+  times, with compaction set to every 2 KB and fsync on in a quarter of the
+  runs. 106 kills landed in the middle of a promote that would change the state
+  (in 33 it had reached the file, in 73 it hadn't), and 9 in the middle of a
+  compaction. Every time, the reopened file held exactly the state after the
+  last confirmed change or after the one in flight, and the store went on
+  working.
 - **Replay.** 300,000 random changes over 200 runs, in memory, in a file
-  compacted at varying sizes, reopened, and read without the lock: the same
-  digest every time, weights included to the last bit.
+  compacted at varying sizes (every run compacted), reopened, and read without
+  the lock: the same digest and the same history every time, weights included
+  to the last bit.
 - **Deadlines and constraints.** 30 simulated days, 2,990 forks with deadlines
   from a minute to three days and constraints on a drifting value, checked
   against a model after every change: 1,152 expired and 609 broke a constraint,
   each exactly when it should, none early, none late.
 - **Many processes.** 8 writer processes adding to one counter 500 times each,
   with a promote every tenth time, while 3 readers read without the lock: the
-  counter ended at 4,000, and 47,668 reads saw no damage and no step back.
+  counter ended at 4,000, and 41,135 reads saw no damage and no step back.
 - **Cost.** On a trunk of 10,000 keys with 100-byte values, a branch that
   changes 3 keys added about 3.9 KB of memory against 2.1 MB for a full copy.
   1,000 such branches share 52,886 map nodes, where full copies would hold 10

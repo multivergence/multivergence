@@ -2,12 +2,12 @@
   "cpus": 2,
   "go": "go1.24.7",
   "os": "linux/amd64",
-  "recorded": "2026-10-18T07:43:34Z",
+  "recorded": "2026-10-18T09:31:55Z",
   "runs": [
     {
       "branches": 10,
       "distinct_nodes": 10427,
-      "fork_ns_per_branch": 7030,
+      "fork_ns_per_branch": 4954,
       "full_copies_bytes": 20670720,
       "heap_added_bytes": 38648,
       "heap_per_branch_bytes": 3864,
@@ -21,12 +21,12 @@
       "trunk_nodes": 10000,
       "trunk_snapshot_bytes": 1139883,
       "value_bytes": 100,
-      "write_ns_per_change": 3878
+      "write_ns_per_change": 3760
     },
     {
       "branches": 100,
       "distinct_nodes": 14307,
-      "fork_ns_per_branch": 5584,
+      "fork_ns_per_branch": 6087,
       "full_copies_bytes": 206707200,
       "heap_added_bytes": 385480,
       "heap_per_branch_bytes": 3854,
@@ -40,26 +40,26 @@
       "trunk_nodes": 10000,
       "trunk_snapshot_bytes": 1139883,
       "value_bytes": 100,
-      "write_ns_per_change": 12195
+      "write_ns_per_change": 16760
     },
     {
       "branches": 1000,
       "distinct_nodes": 52886,
-      "fork_ns_per_branch": 42773,
+      "fork_ns_per_branch": 44414,
       "full_copies_bytes": 2067072000,
-      "heap_added_bytes": 3856560,
+      "heap_added_bytes": 3856576,
       "heap_per_branch_bytes": 3856,
       "keys_changed_per_branch": 3,
       "nodes_if_copied": 10010000,
       "one_full_copy_bytes": 2067072,
-      "ratio_full_copies_to_branches": 535.9885493807953,
+      "ratio_full_copies_to_branches": 535.9863256940872,
       "snapshot_file_bytes": 5862810,
       "snapshot_if_copied_bytes": 1141022883,
       "trunk_keys": 10000,
       "trunk_nodes": 10000,
       "trunk_snapshot_bytes": 1139883,
       "value_bytes": 100,
-      "write_ns_per_change": 69610
+      "write_ns_per_change": 70406
     }
   ],
   "test": "TestCost",

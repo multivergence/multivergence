@@ -1,14 +1,14 @@
 # The release smoke check on static binaries built as the release workflow builds them
-# recorded 2026-10-18 07:45 UTC at no commit plus uncommitted changes, Multivergence 0.1.0, go1.24.7 linux/amd64
+# recorded 2026-10-18 09:33 UTC at 6ba4ce3, Multivergence 0.1.0, go1.24.7 linux/amd64
 # Linux 6.18.44-fc-v139, Intel(R) Xeon(R) Processor @ 2.10GHz, 2 CPUs
 # command: python3 scripts/smoke.py BIN
 
-# 2429112 bytes  multivergence
-# 2048184 bytes  multivergence-demo
+# 2441400 bytes  multivergence
+# 2064568 bytes  multivergence-demo
 
 ok  both binaries report 0.1.0
 ok  the agent demo passes its checks in memory
 ok  the demo's file reads back through the command
 ok  cross-language: 26 checks passed
 ok  eight processes forked at once through the file lock
-smoke check passed: /tmp/tmp.pTKFSid2vp/bin
+smoke check passed: /tmp/tmp.HfP2HeD2dt/bin
