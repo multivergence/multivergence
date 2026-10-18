@@ -156,6 +156,7 @@ func run(t *trace.T) {
 	}
 	t.Say("  constraints on each: api/Median == %q, tests/result != fail", api)
 	t.Wait(40 * time.Second)
+	t.Step(hm, "The agent writes each patch into its branch")
 	for _, c := range candidates {
 		t.Set(c.branch, "src/stats.go", c.src)
 		t.Set(c.branch, "api/Median", c.sig)
