@@ -1,0 +1,7 @@
+/multivergence
+/multivergence-demo
+*.mv
+*.mv.lock
+*.mv.compact
+coverage.out
+/scripts/__pycache__/

@@ -1,0 +1,13 @@
+{
+  "changes": 66538,
+  "cpus": 2,
+  "go": "go1.24.7",
+  "mismatches": 0,
+  "os": "linux/amd64",
+  "reads_compared": 87676869,
+  "recorded": "2026-10-18T07:43:06Z",
+  "seeds": 80,
+  "test": "TestIsolationAgainstModel",
+  "version": "0.1.0",
+  "what": "Every key of the trunk and of every branch, live or dead, compared with a model that copies every map in full, after every change and again after reopening the file."
+}

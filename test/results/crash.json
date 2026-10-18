@@ -1,0 +1,31 @@
+{
+  "changes_per_run": 400,
+  "compact_after_bytes": 2048,
+  "cpus": 2,
+  "go": "go1.24.7",
+  "os": "linux/amd64",
+  "outcomes": {
+    "child finished before the kill": 13,
+    "killed mid-compaction, leaving the unfinished file": 4,
+    "killed with a constrain in flight": 31,
+    "killed with a delete in flight": 18,
+    "killed with a discard in flight": 13,
+    "killed with a expire in flight": 27,
+    "killed with a fork in flight": 95,
+    "killed with a observe in flight": 100,
+    "killed with a promote in flight": 72,
+    "killed with a set in flight": 200,
+    "killed with a sweep in flight": 12,
+    "killed with a weight in flight": 19,
+    "promote in flight: completed": 57,
+    "promote in flight: not started or rolled back": 15,
+    "state after the change in flight": 139,
+    "state after the last confirmed change": 461
+  },
+  "recorded": "2026-10-18T07:43:16Z",
+  "rounds": 600,
+  "test": "TestCrashMidChange",
+  "version": "0.1.0",
+  "what": "A writer process killed with SIGKILL at a random point of a random script (15% promotes, compaction every 2 KB), then the file reopened: the state equals the state after the last confirmed change or the one in flight, and the store goes on working.",
+  "wrong_states": 0
+}

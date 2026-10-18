@@ -1,0 +1,19 @@
+{
+  "branch_checks": 1433847,
+  "changes": 8787,
+  "cpus": 2,
+  "early_deaths": 0,
+  "expired": 1152,
+  "forks": 2990,
+  "go": "go1.24.7",
+  "late_deaths": 0,
+  "max_live": 152,
+  "os": "linux/amd64",
+  "promotes": 12,
+  "recorded": "2026-10-18T07:43:30Z",
+  "simulated_days": 30,
+  "test": "TestLongSchedule",
+  "version": "0.1.0",
+  "violated": 609,
+  "what": "30 simulated days of forks with deadlines from 1 minute to 3 days and numeric constraints on a value that drifts with each fact. Every branch is checked after every change against a model: deadlines fire at the first change at or after them and reads see them at once; constraints fire at the first fact that breaks them."
+}

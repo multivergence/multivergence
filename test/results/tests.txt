@@ -1,0 +1,89 @@
+# Every test, verbose, at 10 times the CI size; the promise tests also write the JSON files here
+# recorded 2026-10-18 07:42 UTC at no commit plus uncommitted changes, Multivergence 0.1.0, go1.24.7 linux/amd64
+# Linux 6.18.44-fc-v139, Intel(R) Xeon(R) Processor @ 2.10GHz, 2 CPUs
+# command: MV_SCALE=10 go test -count=1 -v -timeout 60m ./...
+
+=== RUN   TestIsolationAgainstModel
+    promise_test.go:200: 80 seeds, 66538 changes, 87676869 reads compared, all equal
+--- PASS: TestIsolationAgainstModel (56.23s)
+=== RUN   TestCrashMidChange
+    promise_test.go:355: 600 kills: map[child finished before the kill:13 killed mid-compaction, leaving the unfinished file:4 killed with a constrain in flight:31 killed with a delete in flight:18 killed with a discard in flight:13 killed with a expire in flight:27 killed with a fork in flight:95 killed with a observe in flight:100 killed with a promote in flight:72 killed with a set in flight:200 killed with a sweep in flight:12 killed with a weight in flight:19 promote in flight: completed:57 promote in flight: not started or rolled back:15 state after the change in flight:139 state after the last confirmed change:461]
+--- PASS: TestCrashMidChange (10.35s)
+=== RUN   TestDeterministicReplay
+    promise_test.go:401: seed 0: set 442, delete 71, fork 226, weight 53, constrain 64, expire 70, observe 231, discard 41, promote 238, sweep 64, refused 302
+--- PASS: TestDeterministicReplay (4.53s)
+=== RUN   TestLongSchedule
+    promise_test.go:526: 8787 steps over 30 days: 2990 forks, 1152 expired, 609 violated, 12 promotes, 1433847 checks, up to 152 live
+--- PASS: TestLongSchedule (9.01s)
+=== RUN   TestCost
+    promise_test.go:615:   10 branches: 3.8 KB per branch against 2.1 MB per full copy; 10427 nodes against 110000 copied; file 1.2 MB against 12.5 MB copied
+    promise_test.go:615:  100 branches: 3.8 KB per branch against 2.1 MB per full copy; 14307 nodes against 1010000 copied; file 1.6 MB against 115.1 MB copied
+    promise_test.go:615: 1000 branches: 3.8 KB per branch against 2.1 MB per full copy; 52886 nodes against 10010000 copied; file 5.9 MB against 1141.0 MB copied
+--- PASS: TestCost (3.93s)
+=== RUN   TestManyProcesses
+    promise_test.go:751: 8 writers x 500 updates = 4000, 400 promotes, 47668 reads by 3 readers, 6.147s
+--- PASS: TestManyProcesses (6.15s)
+=== RUN   TestForkIsolation
+--- PASS: TestForkIsolation (0.00s)
+=== RUN   TestNamesAndErrors
+--- PASS: TestNamesAndErrors (0.00s)
+=== RUN   TestConstraintsKill
+--- PASS: TestConstraintsKill (0.00s)
+=== RUN   TestConstraintOps
+--- PASS: TestConstraintOps (0.00s)
+=== RUN   TestParseConstraint
+--- PASS: TestParseConstraint (0.00s)
+=== RUN   TestObserveUpdates
+--- PASS: TestObserveUpdates (0.00s)
+=== RUN   TestObservePrune
+--- PASS: TestObservePrune (0.00s)
+=== RUN   TestObserveExtremeWeights
+--- PASS: TestObserveExtremeWeights (0.00s)
+=== RUN   TestFactsAndConstraints
+--- PASS: TestFactsAndConstraints (0.00s)
+=== RUN   TestDeadlines
+--- PASS: TestDeadlines (0.00s)
+=== RUN   TestPromote
+--- PASS: TestPromote (0.00s)
+=== RUN   TestFileReopen
+--- PASS: TestFileReopen (0.00s)
+=== RUN   TestFileLock
+--- PASS: TestFileLock (0.06s)
+=== RUN   TestTornTail
+--- PASS: TestTornTail (0.01s)
+=== RUN   TestCompaction
+--- PASS: TestCompaction (0.28s)
+=== RUN   TestGoroutines
+--- PASS: TestGoroutines (1.13s)
+PASS
+ok  	github.com/multivergence/multivergence	91.680s
+?   	github.com/multivergence/multivergence/cmd/multivergence	[no test files]
+=== RUN   TestDemo
+--- PASS: TestDemo (0.01s)
+PASS
+ok  	github.com/multivergence/multivergence/examples/agent	0.011s
+?   	github.com/multivergence/multivergence/examples/speculate	[no test files]
+=== RUN   TestCommands
+--- PASS: TestCommands (0.01s)
+=== RUN   TestJSON
+--- PASS: TestJSON (0.01s)
+=== RUN   TestCrossLanguage
+    cli_test.go:160: cross-language: 26 checks passed
+--- PASS: TestCrossLanguage (0.46s)
+PASS
+ok  	github.com/multivergence/multivergence/internal/cli	0.473s
+=== RUN   TestAgainstModel
+--- PASS: TestAgainstModel (0.07s)
+=== RUN   TestCanonicalShape
+--- PASS: TestCanonicalShape (0.02s)
+=== RUN   TestRangePrefix
+--- PASS: TestRangePrefix (0.00s)
+=== RUN   TestSharing
+    pmap_test.go:177: 101 maps of 10000 entries share 13233 nodes
+--- PASS: TestSharing (0.02s)
+=== RUN   TestVisitorBuilderRoundTrip
+--- PASS: TestVisitorBuilderRoundTrip (0.03s)
+=== RUN   TestBuilderRejectsBadTrees
+--- PASS: TestBuilderRejectsBadTrees (0.00s)
+PASS
+ok  	github.com/multivergence/multivergence/internal/pmap	0.135s

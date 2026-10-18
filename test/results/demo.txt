@@ -1,0 +1,54 @@
+# The agent demo: three plans, evidence, one survivor
+# recorded 2026-10-18 07:45 UTC at no commit plus uncommitted changes, Multivergence 0.1.0, go1.24.7 linux/amd64
+# Linux 6.18.44-fc-v139, Intel(R) Xeon(R) Processor @ 2.10GHz, 2 CPUs
+# command: go run ./examples/agent
+
+Multivergence demo: an agent books a trip with three plans in flight at once.
+Simulated clock. Every number below comes from the engine.
+
+[08:00] The request goes on the trunk, the state that is real now
+  trunk: request = Lisbon to Porto, arrive by 09:00; budget = 400
+
+[08:00] The agent forks three plans. Each gets a weight (its prior), a constraint and its own booking
+  plan-train   weight 0.5   constraint fare/train <= 400
+  plan-flight  weight 0.3   constraint fare/flight <= 400
+  plan-bus     weight 0.2   constraint fare/bus <= 400, seat hold runs out at 08:15
+
+    PLAN          PROBABILITY  STATUS
+    plan-train      50.0%     live     ##########
+    plan-flight     30.0%     live     ######
+    plan-bus        20.0%     live     ####
+  The trunk still has no booking: each plan wrote only to its own branch.
+
+[08:02] Tool call: fare search. Its answers are facts, written to every live plan
+  fare/train = 180, fare/flight = 460, fare/bus = 60
+  plan-flight died (violated: fare/flight <= 400)
+
+    PLAN          PROBABILITY  STATUS
+    plan-train      71.4%     live     ##############
+    plan-flight         -     violated
+    plan-bus        28.6%     live     ######
+
+[08:05] Tool call: disruption feed. The agent turns it into likelihoods; the engine applies them
+  "Roadworks on the A1: coaches running about 40 minutes late. Trains on time."
+  How likely is this news if the plan arrives by 09:00?  train 0.9, bus 0.3
+
+    PLAN          PROBABILITY  STATUS
+    plan-train      88.2%     live     ##################
+    plan-flight         -     violated
+    plan-bus        11.8%     live     ##
+
+[08:20] The agent waited for the traveller's go-ahead. The coach seat hold ran out at 08:15
+  plan-bus died (expired)
+
+    PLAN          PROBABILITY  STATUS
+    plan-train     100.0%     live     ####################
+    plan-flight         -     violated
+    plan-bus            -     expired
+  Settled: plan-train is the only live plan.
+
+[08:20] Promote the survivor. Its state becomes the trunk, in one step
+  trunk: booking = Intercidades 06:52, arrives 08:41; fare/train = 180
+  generation 1; branches left: 0
+
+All checks passed.

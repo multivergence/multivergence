@@ -1,0 +1,18 @@
+{
+  "cpus": 2,
+  "final_counter": 4000,
+  "go": "go1.24.7",
+  "lost_updates": 0,
+  "os": "linux/amd64",
+  "promotes": 400,
+  "reader_errors": 0,
+  "readers": 3,
+  "reads": 47668,
+  "recorded": "2026-10-18T07:43:40Z",
+  "seconds": 6.146875265,
+  "test": "TestManyProcesses",
+  "updates_per_writer": 500,
+  "version": "0.1.0",
+  "what": "Writer processes each open the file, read a counter, write it plus one, close, over and over; every tenth time they also fork, write and promote. Compaction is set to every 4 KB, so the file is renamed often. Reader processes read without the lock the whole time.",
+  "writers": 8
+}

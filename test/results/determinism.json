@@ -1,0 +1,12 @@
+{
+  "changes": 300000,
+  "cpus": 2,
+  "differences": 0,
+  "go": "go1.24.7",
+  "os": "linux/amd64",
+  "recorded": "2026-10-18T07:43:21Z",
+  "seeds": 200,
+  "test": "TestDeterministicReplay",
+  "version": "0.1.0",
+  "what": "The same random script run in memory, into a file with compaction at varying sizes, reopened, and read without the lock: the same digest every time, which covers every key, every weight to the last bit, every constraint, deadline and fate."
+}

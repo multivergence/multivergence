@@ -1,0 +1,27 @@
+ok  version answers
+ok  a value from stdin keeps its newlines
+ok  branches come back in the order they were forked
+ok  plan-train starts at 0.5
+ok  plan-flight starts at 0.3
+ok  plan-bus starts at 0.2
+ok  the trunk is untouched by the plans
+ok  a branch reads its own write
+ok  the fare fact kills the flight
+ok  the death names the constraint
+ok  plan-train renormalised to 0.714286
+ok  plan-bus renormalised to 0.285714
+ok  plan-train is 0.882353 after Bayes, worked out in Python
+ok  plan-bus is 0.117647 after Bayes, worked out in Python
+ok  a live branch without a likelihood is refused
+ok  a write that breaks a constraint exits 4 and names the death
+ok  only the bus is left
+ok  at its deadline the bus reads as dead before any write
+ok  sweep records the expiry
+ok  promote starts generation 1
+ok  the trunk holds the promoted booking
+ok  promote drops every branch
+ok  a branch forked before a direct trunk write can't be promoted
+ok  an unknown branch is not_found
+ok  a missing key exits 3 with nothing printed
+ok  the history records forks, deaths and promotes
+cross-language: 26 checks passed
