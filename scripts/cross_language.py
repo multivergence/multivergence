@@ -21,7 +21,10 @@ checks = 0
 
 def run(*args, now="2026-11-02T08:00:00Z", expect=0, stdin=None):
     env = dict(os.environ, MULTIVERGENCE_FILE=STORE, MULTIVERGENCE_NOW=now)
-    p = subprocess.run([BIN, "-json", *args], env=env, capture_output=True, text=True, input=stdin)
+    # Bytes in and out: in text mode Windows would turn \n into \r\n on stdin.
+    p = subprocess.run([BIN, "-json", *args], env=env, capture_output=True,
+                       input=stdin.encode() if stdin is not None else None)
+    p.stdout, p.stderr = p.stdout.decode(), p.stderr.decode()
     if p.returncode != expect:
         fail(f"{' '.join(args)}: exit {p.returncode}, wanted {expect}\n{p.stdout}{p.stderr}")
     return json.loads(p.stdout) if p.stdout.strip() else None

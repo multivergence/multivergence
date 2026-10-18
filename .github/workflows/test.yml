@@ -36,7 +36,18 @@ jobs:
       - if: runner.os != 'Windows'
         run: test -z "$(gofmt -l .)"
       - run: go vet ./...
-      - run: go test -count=1 ./...
+      - name: Tests
+        shell: bash
+        run: |
+          set -o pipefail
+          go test -count=1 ./... 2>&1 | tee test-output.txt
+      - name: Report failing tests as annotations
+        if: failure()
+        shell: bash
+        run: |
+          grep -E -- '--- FAIL|_test\.go:[0-9]+|panic:|^FAIL' test-output.txt | head -40 | while IFS= read -r line; do
+            echo "::error::${line//%/%25}"
+          done
       - if: runner.os == 'Linux' && matrix.go == '1.26.x'
         run: go test -race -count=1 ./...
       - name: Release plan cases
