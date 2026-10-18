@@ -1,0 +1,64 @@
+# A dispatcher keeps four delivery plans open until the van leaves
+# recorded 2026-10-18 09:49 UTC at cf3ca69, Multivergence 0.1.0, go1.24.7 linux/amd64
+# Linux 6.18.44-fc-v139, Intel(R) Xeon(R) Processor @ 2.10GHz, 2 CPUs
+# command: go run ./examples/routing
+
+Multivergence example: a dispatcher keeps four delivery plans open until the van leaves.
+Simulated clock. Every number below comes from the engine.
+
+[07:30] Today's load goes on the trunk
+  18 parcels, 640 kg, every stop by 12:00
+
+[07:30] The planner forks four plans. Each van's capacity is a constraint on the load
+  ring-road     weight 0.35  big van    load_kg <= 900
+  city-centre   weight 0.30  big van    load_kg <= 900
+  river-ferry   weight 0.20  big van    load_kg <= 900
+  small-van     weight 0.15  small van  load_kg <= 700
+  ring-road also needs road/ring != closed; city-centre needs zone/centre != restricted
+  river-ferry must be booked on the ferry by 08:20: its deadline
+
+    BRANCH          PROBABILITY  STATUS
+    ring-road         35.0%     live      #######
+    city-centre       30.0%     live      ######
+    river-ferry       20.0%     live      ####
+    small-van         15.0%     live      ###
+
+[07:45] A late order: one more pallet, 120 kg. The new load is a fact for every plan
+  load_kg = 760
+  small-van died (violated: load_kg <= 700)
+
+    BRANCH          PROBABILITY  STATUS
+    ring-road         41.2%     live      ########
+    city-centre       35.3%     live      #######
+    river-ferry       23.5%     live      #####
+    small-van             -     violated
+
+[07:55] Traffic report: a lane closed on the ring road at junction 4, about 25 minutes of delay
+  The road is open, so ring-road's constraint holds; its chances drop.
+  How likely is this report if the plan is the fastest? ring-road 0.3, the others 0.9
+
+    BRANCH          PROBABILITY  STATUS
+    ring-road         18.9%     live      ####
+    city-centre       48.6%     live      ##########
+    river-ferry       32.4%     live      ######
+    small-van             -     violated
+
+[08:25] The depot manager signs off, five minutes after the ferry's cut-off
+  river-ferry reads as expired already: nothing had to record it
+
+    BRANCH          PROBABILITY  STATUS
+    ring-road         28.0%     live      ######
+    city-centre       72.0%     live      ##############
+    river-ferry           -     expired
+    small-van             -     violated
+  The dispatcher locks the best plan: city-centre at 72.0%
+  trunk: route = straight through the centre, then the north estates
+  trunk: van = big van, load_kg = 760, parcels = 19
+
+[08:25] How each plan ended
+  07:45  killed   small-van    violated: load_kg <= 700
+  08:25  killed   river-ferry  expired
+  08:25  dropped  ring-road
+  08:25  promote  city-centre  generation 1
+
+All checks passed.

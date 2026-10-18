@@ -1,0 +1,77 @@
+# An agent books a venue with four holds open at once
+# recorded 2026-10-18 09:49 UTC at cf3ca69, Multivergence 0.1.0, go1.24.7 linux/amd64
+# Linux 6.18.44-fc-v139, Intel(R) Xeon(R) Processor @ 2.10GHz, 2 CPUs
+# command: go run ./examples/holds
+
+Multivergence example: an agent books an offsite venue with four holds open at once.
+Simulated clock over two days. Every number below comes from the engine.
+
+[Mon 09:00] The request goes on the trunk before any hold is placed
+  headcount = 40, budget = 6000
+
+[Mon 09:00] Four venues agree to hold the dates. Each hold is a branch
+  hall-a    weight 0.3  seats 45  est. 5200  hold until Wed 09:00
+  loft-b    weight 0.3  seats 60  est. 5500  hold until Tue 09:00
+  barn-c    weight 0.2  seats 80  est. 5800  hold until Thu 09:00
+  villa-d   weight 0.2  seats 50  est. 5900  hold until Thu 09:00
+  constraints on each: headcount <= its seats, quote/total <= 6000
+
+    BRANCH          PROBABILITY  STATUS
+    hall-a            30.0%     live      ######
+    loft-b            30.0%     live      ######
+    barn-c            20.0%     live      ####
+    villa-d           20.0%     live      ####
+
+[Mon 14:00] Quotes come back. Each is written to its own hold only
+  hall-a    quote 5200
+  loft-b    quote 5400
+  barn-c    quote 7200
+  branch barn-c died: violated (quote/total <= 6000)
+  villa-d   quote 5900
+
+    BRANCH          PROBABILITY  STATUS
+    hall-a            37.5%     live      #######
+    loft-b            37.5%     live      #######
+    barn-c                -     violated
+    villa-d           25.0%     live      #####
+
+[Tue 08:00] loft-b's hold ends in an hour. The agent asks; the venue extends it to 18:00
+  loft-b deadline now Tue 18:00
+
+[Tue 11:00] Six more people sign up. The head count is a fact, written to every hold
+  headcount = 46
+  hall-a died (violated: headcount <= 45)
+
+    BRANCH          PROBABILITY  STATUS
+    hall-a                -     violated
+    loft-b            60.0%     live      ############
+    barn-c                -     violated
+    villa-d           40.0%     live      ########
+
+[Tue 15:00] The team poll closes. The agent turns it into likelihoods
+  loft-b 0.7, villa-d 0.3
+
+    BRANCH          PROBABILITY  STATUS
+    hall-a                -     violated
+    loft-b            77.8%     live      ################
+    barn-c                -     violated
+    villa-d           22.2%     live      ####
+
+[Tue 15:30] The manager approves and loft-b confirms the booking. Promote it
+  trunk: venue = loft-b, quote/total = 5400, headcount = 46
+  holds to release with the venues: [villa-d]
+  Without the extension, loft-b's hold would have run out at Tue 09:00,
+  before the new head count and the poll arrived.
+
+[Tue 15:30] The history shows each hold's fate
+  Mon 09:00  expire   hall-a   at 2026-11-11T09:00:00Z
+  Mon 09:00  expire   loft-b   at 2026-11-10T09:00:00Z
+  Mon 09:00  expire   barn-c   at 2026-11-12T09:00:00Z
+  Mon 09:00  expire   villa-d  at 2026-11-12T09:00:00Z
+  Mon 14:00  killed   barn-c   violated: quote/total <= 6000
+  Tue 08:00  expire   loft-b   at 2026-11-10T18:00:00Z
+  Tue 11:00  killed   hall-a   violated: headcount <= 45
+  Tue 15:30  dropped  villa-d
+  Tue 15:30  promote  loft-b   generation 1
+
+All checks passed.
