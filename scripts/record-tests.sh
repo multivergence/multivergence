@@ -15,14 +15,14 @@
 set -eu
 cd "$(dirname "$0")/.."
 out=test/results
+# Whether the checkout was clean before anything was recorded. The old
+# results are part of the checkout, so this comes before they're cleared.
+state="at $(git rev-parse --short HEAD 2>/dev/null || echo 'no commit')$(test -z "$(git status --porcelain 2>/dev/null)" || echo ' plus uncommitted changes')"
 mkdir -p "$out"
 rm -f "$out"/*.json "$out"/*.txt
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 scale=${MV_SCALE:-10}
-
-# Whether the checkout was clean before anything was recorded.
-state="at $(git rev-parse --short HEAD 2>/dev/null || echo 'no commit')$(test -z "$(git status --porcelain 2>/dev/null)" || echo ' plus uncommitted changes')"
 
 header() {
 	echo "# $1"
