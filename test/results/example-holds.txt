@@ -1,10 +1,10 @@
 # An agent books a venue with four holds open at once
-# recorded 2026-10-18 09:54 UTC at f3de91c, Multivergence 0.1.0, go1.24.7 linux/amd64
+# recorded 2026-10-18 09:54 UTC at d159ddf, Multivergence 0.1.0, go1.24.7 linux/amd64
 # Linux 6.18.44-fc-v139, Intel(R) Xeon(R) Processor @ 2.10GHz, 2 CPUs
 # command: go run ./examples/holds
 
 Multivergence example: an agent books an offsite venue with four holds open at once.
-Simulated clock over two days. Every number below comes from the engine.
+Simulated clock over two days. Every probability below comes from the engine.
 
 [Mon 09:00] The request goes on the trunk before any hold is placed
   headcount = 40, budget = 6000
