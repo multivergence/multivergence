@@ -20,7 +20,9 @@ declarative constraints and deadlines, Observe with caller-supplied
 likelihoods, Promote with a staleness check, an append-only CRC-checked file
 with torn-tail recovery and snapshot compaction, a writer lock, a CLI with JSON
 output (`internal/cli`), the agent demo (`examples/agent`, shipped as
-`multivergence-demo`) and a speculation example.
+`multivergence-demo`), a speculation example, and four use examples
+(`examples/fixes`, `incident`, `holds`, `routing`, sharing `examples/internal/trace`),
+each with a case study on the site.
 
 Read [docs/UPDATES.md](docs/UPDATES.md) before changing how weights,
 constraints or deadlines behave: it is the contract, and replaying old files
@@ -46,7 +48,8 @@ figures.
 Multivergence.com is in `photozeitgeist/multivergence.com` (October 2026): the
 Hugo Launch template copied unchanged, with content and config values only.
 Pages: about, contact, quick start, download, reference. Posts: the explainer
-(how it works), the launch, how it was tested, and the name. Images are drawn
+(how it works), the launch, how it was tested, the name, and four case
+studies tagged "case studies" (menu entry Case Studies), one per use example. Images are drawn
 into static/images. When a recording changes a number, update the site too.
 
 ## Next
