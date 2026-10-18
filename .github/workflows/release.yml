@@ -1,0 +1,214 @@
+name: release
+
+# Builds the Multivergence binaries, checks each one on the kind of machine
+# it is for, and publishes them with a release.
+#
+# Releases go out on their own. When the test workflow passes on a push to
+# main and the Version in multivergence.go has no tag yet, this workflow
+# builds the binaries from that commit, runs scripts/smoke.py on them, then
+# tags the commit vX.Y.Z and publishes the release "Multivergence vX.Y.Z"
+# with the archives and SHA256SUMS attached. Nothing goes public unless every
+# build and check passes. scripts/release-plan.py has the rules, and
+# RELEASING.md the whole procedure.
+#
+# It also attaches binaries to a release someone publishes by hand, and it
+# can be run by hand to rebuild the binaries of an existing tag.
+
+on:
+  workflow_run:
+    workflows: [test]
+    types: [completed]
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build again, such as v0.1.0"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.26.x"
+
+jobs:
+  plan:
+    # After the tests, only for a push to main in this repository that passed.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.plan.outputs.tag }}
+      ref: ${{ steps.plan.outputs.ref }}
+      new: ${{ steps.plan.outputs.new }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          RUN_WORKFLOW: ${{ github.event.workflow_run.name }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: python3 scripts/release-plan.py
+
+  # Pure Go, no cgo: every target builds on one Linux runner. Each is then
+  # checked on its own kind of machine below.
+  build:
+    needs: plan
+    if: needs.plan.outputs.tag != ''
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { goos: linux, goarch: amd64, pack: tar }
+          - { goos: linux, goarch: arm64, pack: tar }
+          - { goos: darwin, goarch: arm64, pack: tar }
+          - { goos: darwin, goarch: amd64, pack: tar }
+          - { goos: windows, goarch: amd64, pack: zip }
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Build
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          ext=""
+          if [ "$GOOS" = windows ]; then ext=".exe"; fi
+          mkdir pkg
+          go build -trimpath -ldflags '-s -w' -o "pkg/multivergence$ext" ./cmd/multivergence
+          go build -trimpath -ldflags '-s -w' -o "pkg/multivergence-demo$ext" ./examples/agent
+          file pkg/*
+          if [ "$GOOS" = linux ]; then file pkg/multivergence | grep -q 'statically linked'; fi
+      - name: Package
+        run: |
+          cp LICENSE NOTICE THIRD_PARTY_LICENSES.md README.md pkg/
+          name=multivergence_${{ matrix.goos }}_${{ matrix.goarch }}
+          if [ "${{ matrix.pack }}" = zip ]; then
+            (cd pkg && zip -q "../$name.zip" *)
+          else
+            tar -czf "$name.tar.gz" -C pkg .
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: multivergence_${{ matrix.goos }}_${{ matrix.goarch }}
+          path: multivergence_${{ matrix.goos }}_${{ matrix.goarch }}.*
+
+  # Each archive's binaries run the smoke check on the machine they are for.
+  # macOS Intel can only be checked for its architecture on the runners.
+  check:
+    needs: [plan, build]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { artifact: multivergence_linux_amd64, runner: ubuntu-latest, file: tar }
+          - { artifact: multivergence_linux_arm64, runner: ubuntu-24.04-arm, file: tar }
+          - { artifact: multivergence_darwin_arm64, runner: macos-latest, file: tar }
+          - { artifact: multivergence_darwin_amd64, runner: macos-latest, file: tar, archonly: x86_64 }
+          - { artifact: multivergence_windows_amd64, runner: windows-latest, file: zip }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.artifact }}
+      - name: Unpack
+        shell: bash
+        run: |
+          mkdir bin
+          if [ "${{ matrix.file }}" = zip ]; then
+            pwsh -NoProfile -Command "Expand-Archive -Path '${{ matrix.artifact }}.zip' -DestinationPath bin"
+          else
+            tar -xzf "${{ matrix.artifact }}.tar.gz" -C bin
+          fi
+          ls -la bin
+      - name: Architecture
+        if: matrix.archonly != ''
+        run: file bin/multivergence | grep -q '${{ matrix.archonly }}'
+      - name: Smoke check
+        if: matrix.archonly == ''
+        shell: bash
+        run: |
+          PY=python3; if [ "$RUNNER_OS" = "Windows" ]; then PY=python; fi
+          "$PY" scripts/smoke.py bin
+
+  release:
+    needs: [plan, build, check]
+    # Two runs for the same tag take turns; the second finds it published.
+    concurrency:
+      group: release-${{ needs.plan.outputs.tag }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.plan.outputs.tag }}
+      REF: ${{ needs.plan.outputs.ref }}
+      NEW: ${{ needs.plan.outputs.new }}
+      GH_TOKEN: ${{ github.token }}
+      FILES: >-
+        multivergence_linux_amd64.tar.gz multivergence_linux_arm64.tar.gz
+        multivergence_darwin_arm64.tar.gz multivergence_darwin_amd64.tar.gz
+        multivergence_windows_amd64.zip SHA256SUMS
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: multivergence_*
+          path: dist
+          merge-multiple: true
+      - name: Checksums and notes
+        run: |
+          cd dist
+          sha256sum multivergence_* > SHA256SUMS
+          cat SHA256SUMS
+          cat > ../notes.md <<'EOF'
+          Ready-built Multivergence binaries. Each archive holds two commands with the license files and README:
+
+          - `multivergence`: fork, weigh, constrain, observe, expire and promote branches of state in a store file, from any language (`-json` for machine-readable output)
+          - `multivergence-demo`: the agent demo, three plans collapsing to one as evidence arrives, with its own checks
+
+          | System | File |
+          |---|---|
+          | Linux, x86-64 (static) | multivergence_linux_amd64.tar.gz |
+          | Linux, ARM64 (static) | multivergence_linux_arm64.tar.gz |
+          | macOS, Apple silicon | multivergence_darwin_arm64.tar.gz |
+          | macOS, Intel | multivergence_darwin_amd64.tar.gz |
+          | Windows, x86-64 | multivergence_windows_amd64.zip |
+
+          SHA256SUMS lists the checksums. The macOS binaries aren't signed by Apple, so macOS may ask you to allow them the first time, or you can run `xattr -d com.apple.quarantine multivergence multivergence-demo`. To use Multivergence from Go instead: `go get github.com/multivergence/multivergence@latest`.
+          EOF
+      - name: Tag the commit and publish the release, binaries attached
+        if: env.NEW == 'true'
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "$TAG is out already."
+            exit 0
+          fi
+          cd dist
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$REF" \
+            --title "Multivergence $TAG" --notes-file ../notes.md $FILES
+      - name: Attach the binaries to an existing release
+        if: env.NEW != 'true'
+        run: |
+          cd dist
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber $FILES
+          body=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)
+          if [ -z "$body" ]; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file ../notes.md
+          fi
